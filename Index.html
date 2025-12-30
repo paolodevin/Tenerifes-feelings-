@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Gioco delle Votazioni</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f2f2f2;
+  padding: 20px;
+}
+.box {
+  background: white;
+  padding: 20px;
+  max-width: 800px;
+  margin: auto;
+  border-radius: 8px;
+}
+h2, h3 {
+  text-align: center;
+}
+input, select, button {
+  width: 100%;
+  padding: 6px;
+  margin-top: 5px;
+}
+.persona {
+  border-top: 1px solid #ddd;
+  margin-top: 15px;
+  padding-top: 10px;
+}
+.categoria {
+  margin-top: 5px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 6px;
+  text-align: center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box" id="loginBox">
+  <h2>Login</h2>
+  <input id="username" placeholder="Inserisci il tuo nome">
+  <button onclick="login()">Entra</button>
+</div>
+
+<div class="box" id="appBox" style="display:none;">
+  <h2 id="welcome"></h2>
+
+  <h3>Vota i partecipanti</h3>
+  <div id="votazioni"></div>
+
+  <h3>Classifica aggiornata</h3>
+  <div id="classifica"></div>
+</div>
+
+<script>
+/* ========= MODIFICA SOLO QUI ========= */
+
+const partecipanti = [
+  "Marco",
+  "Luca",
+  "Anna",
+  "Giulia"
+];
+
+const categorie = [
+  "Stile",
+  "Umorismo",
+  "Intraprendenza",
+  "Lamentometro"
+];
+
+// DATE DEL GIOCO
+const inizioGioco = new Date("2025-12-31");
+const fineGioco   = new Date("2026-01-06");
+
+/* =================================== */
+
+let utente = "";
+const oggi = new Date().toISOString().split("T")[0];
+
+function login() {
+  const oggiData = new Date();
+  oggiData.setHours(0,0,0,0);
+
+  if (oggiData < inizioGioco) {
+    alert("Il gioco non è ancora iniziato!");
+    return;
+  }
+
+  if (oggiData > fineGioco) {
+    mostraPremioFinale();
+    return;
+  }
+
+  const nome = document.getElementById("username").value.trim();
+  if (!partecipanti.includes(nome)) {
+    alert("Nome non valido");
+    return;
+  }
+
+  utente = nome;
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("appBox").style.display = "block";
+  document.getElementById("welcome").innerText = "Ciao " + utente;
+
+  mostraVotazioni();
+  mostraClassifica();
+}
+
+function mostraVotazioni() {
+  const div = document.getElementById("votazioni");
+  div.innerHTML = "";
+
+  partecipanti.filter(p => p !== utente).forEach(p => {
+    const key = `${oggi}_${utente}_${p}`;
+    if (localStorage.getItem(key)) {
+      div.innerHTML += `<div class="persona"><strong>${p}</strong> — già votato oggi</div>`;
+      return;
+    }
+
+    let html = `<div class="persona"><strong>${p}</strong>`;
+    categorie.forEach(c => {
+      html += `
+        <div class="categoria">
+          ${c}
+          <select id="${p}_${c}">
+            <option value="">-</option>
+            <option>1</option>
+            <option>2</option>
+            <option>3</option>
+            <option>4</option>
+            <option>5</option>
+          </select>
+        </div>`;
+    });
+
+    html += `<button onclick="vota('${p}')">Vota</button></div>`;
+    div.innerHTML += html;
+  });
+}
+
+function vota(persona) {
+  let voti = {};
+  for (let c of categorie) {
+    const v = document.getElementById(`${persona}_${c}`).value;
+    if (!v) {
+      alert("Completa tutti i voti");
+      return;
+    }
+    voti[c] = Number(v);
+  }
+
+  const key = `${oggi}_${utente}_${persona}`;
+  localStorage.setItem(key, JSON.stringify(voti));
+
+  mostraVotazioni();
+  mostraClassifica();
+}
+
+function mostraClassifica() {
+  let totali = {};
+  let conteggi = {};
+
+  partecipanti.forEach(p => {
+    totali[p] = {};
+    conteggi[p] = {};
+    categorie.forEach(c => {
+      totali[p][c] = 0;
+      conteggi[p][c] = 0;
+    });
+  });
+
+  for (let k in localStorage) {
+    if (!k.startsWith(oggi)) continue;
+    const persona = k.split("_")[2];
+    const voti = JSON.parse(localStorage.getItem(k));
+    for (let c in voti) {
+      totali[persona][c] += voti[c];
+      conteggi[persona][c]++;
+    }
+  }
+
+  let html = `<table><tr><th>Nome</th>`;
+  categorie.forEach(c => html += `<th>${c}</th>`);
+  html += `<th>Media</th></tr>`;
+
+  partecipanti.forEach(p => {
+    let somma = 0;
+    let n = 0;
+    html += `<tr><td>${p}</td>`;
+    categorie.forEach(c => {
+      const media = conteggi[p][c]
+        ? (totali[p][c] / conteggi[p][c]).toFixed(1)
+        : "-";
+      html += `<td>${media}</td>`;
+      if (media !== "-") {
+        somma += Number(media);
+        n++;
+      }
+    });
+    html += `<td>${n ? (somma / n).toFixed(1) : "-"}</td></tr>`;
+  });
+
+  html += `</table>`;
+  document.getElementById("classifica").innerHTML = html;
+}
+
+function mostraPremioFinale() {
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("appBox").style.display = "block";
+  document.getElementById("appBox").innerHTML = `
+    <h2>🏆 Gioco concluso</h2>
+    <h3>Premio finale</h3>
+    <p style="text-align:center; font-size:18px;">
+      🍽️ <strong>Cena pagata dagli altri 3</strong>
+    </p>
+  `;
+}
+</script>
+
+</body>
+</html>
