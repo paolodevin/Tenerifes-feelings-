@@ -2,18 +2,38 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Gioco delle Votazioni</title>
+<title>Gioco Votazioni Tenerife</title>
 <style>
 body {
   font-family: Arial, sans-serif;
   background: #f2f2f2;
-  padding: 20px;
+  margin: 0;
+  padding: 0;
+}
+#cover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1570032256262-34d70d1d0a0f?auto=format&fit=crop&w=1500&q=80') center/cover no-repeat;
+  color: white;
+  text-align: center;
+}
+#cover h1 {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+#cover button {
+  font-size: 18px;
+  padding: 10px 20px;
+  cursor: pointer;
 }
 .box {
   background: white;
   padding: 20px;
   max-width: 800px;
-  margin: auto;
+  margin: 30px auto;
   border-radius: 8px;
 }
 h2, h3 {
@@ -47,7 +67,12 @@ th, td {
 
 <body>
 
-<div class="box" id="loginBox">
+<div id="cover">
+  <h1>Gioco Votazioni Tenerife 🌴</h1>
+  <button onclick="startGame()">Entra nel gioco</button>
+</div>
+
+<div class="box" id="loginBox" style="display:none;">
   <h2>Login</h2>
   <input id="username" placeholder="Inserisci il tuo nome">
   <button onclick="login()">Entra</button>
@@ -64,39 +89,35 @@ th, td {
 </div>
 
 <script>
-/* ========= MODIFICA SOLO QUI ========= */
-
-const partecipanti = [
-  "Marco",
-  "Luca",
-  "Anna",
-  "Giulia"
-];
-
+/* ====== CONFIGURAZIONE ====== */
+const partecipanti = ["Vik", "Medda", "Ale", "Paolino"];
 const categorie = [
-  "Stile",
-  "Umorismo",
-  "Intraprendenza",
-  "Lamentometro"
+  {nome:"Stile", luogo:"Playa de las Teresitas"},
+  {nome:"Umorismo", luogo:"Loro Parque"},
+  {nome:"Intraprendenza", luogo:"Teide"},
+  {nome:"Lamentometro", luogo:"Masca"}
 ];
 
 // DATE DEL GIOCO
 const inizioGioco = new Date("2025-12-31");
 const fineGioco   = new Date("2026-01-06");
 
-/* =================================== */
-
 let utente = "";
 const oggi = new Date().toISOString().split("T")[0];
+
+function startGame(){
+  document.getElementById("cover").style.display = "none";
+  document.getElementById("loginBox").style.display = "block";
+}
 
 function login() {
   const oggiData = new Date();
   oggiData.setHours(0,0,0,0);
 
-  if (oggiData < inizioGioco) {
-    alert("Il gioco non è ancora iniziato!");
-    return;
-  }
+  //if (oggiData < inizioGioco) {
+    //alert("Il gioco non è ancora iniziato!");
+    //return;
+  //}
 
   if (oggiData > fineGioco) {
     mostraPremioFinale();
@@ -133,8 +154,8 @@ function mostraVotazioni() {
     categorie.forEach(c => {
       html += `
         <div class="categoria">
-          ${c}
-          <select id="${p}_${c}">
+          ${c.nome} (${c.luogo})
+          <select id="${p}_${c.nome}">
             <option value="">-</option>
             <option>1</option>
             <option>2</option>
@@ -153,12 +174,12 @@ function mostraVotazioni() {
 function vota(persona) {
   let voti = {};
   for (let c of categorie) {
-    const v = document.getElementById(`${persona}_${c}`).value;
+    const v = document.getElementById(`${persona}_${c.nome}`).value;
     if (!v) {
       alert("Completa tutti i voti");
       return;
     }
-    voti[c] = Number(v);
+    voti[c.nome] = Number(v);
   }
 
   const key = `${oggi}_${utente}_${persona}`;
@@ -176,8 +197,8 @@ function mostraClassifica() {
     totali[p] = {};
     conteggi[p] = {};
     categorie.forEach(c => {
-      totali[p][c] = 0;
-      conteggi[p][c] = 0;
+      totali[p][c.nome] = 0;
+      conteggi[p][c.nome] = 0;
     });
   });
 
@@ -192,7 +213,7 @@ function mostraClassifica() {
   }
 
   let html = `<table><tr><th>Nome</th>`;
-  categorie.forEach(c => html += `<th>${c}</th>`);
+  categorie.forEach(c => html += `<th>${c.nome}</th>`);
   html += `<th>Media</th></tr>`;
 
   partecipanti.forEach(p => {
@@ -200,8 +221,8 @@ function mostraClassifica() {
     let n = 0;
     html += `<tr><td>${p}</td>`;
     categorie.forEach(c => {
-      const media = conteggi[p][c]
-        ? (totali[p][c] / conteggi[p][c]).toFixed(1)
+      const media = conteggi[p][c.nome]
+        ? (totali[p][c.nome] / conteggi[p][c.nome]).toFixed(1)
         : "-";
       html += `<td>${media}</td>`;
       if (media !== "-") {
