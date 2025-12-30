@@ -67,17 +67,38 @@ th, td {
 
 <body>
 
+<!-- COPERTINA -->
 <div id="cover">
   <h1>Gioco Votazioni Tenerife 🌴</h1>
   <button onclick="startGame()">Entra nel gioco</button>
 </div>
 
+<!-- LOGIN -->
 <div class="box" id="loginBox" style="display:none;">
   <h2>Login</h2>
   <input id="username" placeholder="Inserisci il tuo nome">
   <button onclick="login()">Entra</button>
 </div>
 
+<!-- REGOLAMENTO -->
+<div class="box" id="regolamentoBox" style="display:none;">
+  <h2>📜 Regolamento del gioco</h2>
+  <p>
+    Benvenuto al gioco di votazioni Tenerife!<br>
+    - Ogni giorno puoi votare gli altri partecipanti<br>
+    - Punteggio da 1 a 5 per ciascuna categoria:<br>
+      • Stile (Playa de las Teresitas)<br>
+      • Umorismo (Loro Parque)<br>
+      • Intraprendenza (Teide)<br>
+      • Lamentometro (Masca)<br>
+    - Non puoi votare te stesso<br>
+    - La classifica si aggiorna automaticamente<br>
+    - Il gioco termina il 6/1: apparirà il premio finale!
+  </p>
+  <button onclick="accettaRegolamento()">Ho letto e accetto</button>
+</div>
+
+<!-- APP PRINCIPALE -->
 <div class="box" id="appBox" style="display:none;">
   <h2 id="welcome"></h2>
 
@@ -105,25 +126,13 @@ const fineGioco   = new Date("2026-01-06");
 let utente = "";
 const oggi = new Date().toISOString().split("T")[0];
 
+/* ====== FUNZIONI ====== */
 function startGame(){
   document.getElementById("cover").style.display = "none";
   document.getElementById("loginBox").style.display = "block";
 }
 
 function login() {
-  const oggiData = new Date();
-  oggiData.setHours(0,0,0,0);
-
-  //if (oggiData < inizioGioco) {
-    //alert("Il gioco non è ancora iniziato!");
-    //return;
-  //}
-
-  if (oggiData > fineGioco) {
-    mostraPremioFinale();
-    return;
-  }
-
   const nome = document.getElementById("username").value.trim();
   if (!partecipanti.includes(nome)) {
     alert("Nome non valido");
@@ -132,6 +141,14 @@ function login() {
 
   utente = nome;
   document.getElementById("loginBox").style.display = "none";
+  document.getElementById("regolamentoBox").style.display = "block";
+
+  // PER TEST TEMPORANEO: ignoriamo le date
+  // rimuovere commenti quando il gioco inizia
+}
+
+function accettaRegolamento() {
+  document.getElementById("regolamentoBox").style.display = "none";
   document.getElementById("appBox").style.display = "block";
   document.getElementById("welcome").innerText = "Ciao " + utente;
 
@@ -239,6 +256,7 @@ function mostraClassifica() {
 
 function mostraPremioFinale() {
   document.getElementById("loginBox").style.display = "none";
+  document.getElementById("regolamentoBox").style.display = "none";
   document.getElementById("appBox").style.display = "block";
   document.getElementById("appBox").innerHTML = `
     <h2>🏆 Gioco concluso</h2>
